@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,7 +12,8 @@
       font-family: Arial, sans-serif;
       margin: 0;
       padding: 0;
-      background-color: #e0f2ff; /* Light blue background */
+      background-color: #e0f2ff;
+      /* Light blue background */
     }
 
     .chatbot {
@@ -24,7 +26,8 @@
     }
 
     .header {
-      background-color: #007bff; /* Dark blue header */
+      background-color: #007bff;
+      /* Dark blue header */
       color: #fff;
       padding: 10px;
       text-align: center;
@@ -60,7 +63,8 @@
 
     /* Additional styles for chat messages */
     .user-message {
-      background-color: #d0e3f0; /* Lighter blue for user messages */
+      background-color: #d0e3f0;
+      /* Lighter blue for user messages */
       padding: 10px;
       border-radius: 5px;
       margin: 5px 0;
@@ -83,7 +87,8 @@
 
     #typing-indicator:before {
       content: "Bot is typing...";
-      color: #007bff; /* Blue text for typing indicator */
+      color: #007bff;
+      /* Blue text for typing indicator */
       animation: typing 1s steps(4, end) infinite;
     }
 
@@ -91,27 +96,33 @@
       from {
         width: 0;
       }
+
       to {
         width: 100%;
       }
     }
   </style>
 </head>
+
 <body>
   <div class="chat-container">
     <div class="chat-header">
       <img src="bot_icon.png" alt="Bot Icon" class="chat-image">
       <h2 class="chat-title">InterviewerBot</h2>
     </div>
-    <div id="chat-history">
+    <div id="chat-history" class="messages">
       <!-- Messages will be appended here -->
+      {% for message in chat_history %}
+      <div class="message">
+        <p>{{ message }}</p>
+      </div>
+      {% endfor %}
     </div>
     <form id="messageForm" method="post">
       <input type="text" id="userMessage" name="msg" placeholder="Type your message">
       <button type="submit"><i class="fas fa-paper-plane"></i></button>
     </form>
     <button id="speechButton"><i class="fas fa-microphone"></i></button>
-    <p id="response">{{ response }}</p>
     <p id="typing-indicator"></p>
   </div>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
@@ -121,30 +132,31 @@
       $("#speechButton").on("click", function () {
         recognizeSpeech();
       });
-  
+
       // Submit form event handler
       $("#messageForm").on("submit", function (event) {
         event.preventDefault(); // Prevent form submission
         var userMessage = $("#userMessage").val(); // Get user message from input field
         sendMessage(userMessage); // Send user message
+        $("#userMessage").val(""); // Clear the input field after sending the message
       });
-  
+
       // Function to recognize speech
       function recognizeSpeech() {
         var recognition = new webkitSpeechRecognition(); // Create speech recognition object
         recognition.lang = 'en-US'; // Set language
         recognition.start(); // Start recognition
-  
+
         recognition.onresult = function (event) {
           var userSpeech = event.results[0][0].transcript; // Get recognized speech
           sendMessage(userSpeech); // Send user speech
         };
-  
+
         recognition.onerror = function (event) {
           console.error("Speech recognition error:", event.error);
         };
       }
-  
+
       // Function to send user message
       function sendMessage(message) {
         $.ajax({
@@ -152,31 +164,11 @@
           url: "/",
           data: { msg: message }, // Send user message to Flask backend
           success: function (response) {
-            // Handle response from Flask backend
-            console.log(response); // Log response to console (for debugging)
-            // Update chat history with user message
-            $("#chat-history").append(`<div class="message user-message">
-                                          <div class="message-content">
-                                            <p>${message}</p>
-                                            <span class="timestamp">${getCurrentTime()}</span>
-                                          </div>
-                                        </div>`);
-            // Clear input field after sending message
-            $("#userMessage").val("");
+            // Update the chat interface with the received response and chat history
+            $(".messages").append('<div class="chatbot-message">' + response.response + '</div>');
+            $(".messages").append('<div class="user-message">' + message + '</div>');
             // Scroll to bottom of chat history
-            $("#chat-history").scrollTop($("#chat-history")[0].scrollHeight);
-            // Display bot response
-            var botMessage = `<div class="message chatbot-message">
-                                <div class="message-content">
-                                  <p>${response}</p>
-                                  <span class="timestamp">${getCurrentTime()}</span>
-                                </div>
-                              </div>`;
-            $("#chat-history").append(botMessage);
-            // Detach the event handler after displaying the bot response
-            $(botMessage).one("animationend", function() {
-              $(this).remove();
-            });
+            $(".messages").scrollTop($(".messages")[0].scrollHeight);
           },
           error: function (xhr, status, error) {
             // Handle errors
@@ -184,15 +176,10 @@
           }
         });
       }
-  
-      // Function to get current time in HH:MM format
-      function getCurrentTime() {
-        var now = new Date();
-        var hours = now.getHours().toString().padStart(2, '0');
-        var minutes = now.getMinutes().toString().padStart(2, '0');
-        return hours + ":" + minutes;
-      }
     });
+
+
   </script>
 </body>
+
 </html>
