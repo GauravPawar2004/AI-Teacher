@@ -14,7 +14,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 from time import sleep
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 
 app = Flask(__name__)
 
@@ -100,14 +100,21 @@ def speak(text):
     engine.runAndWait()
 
 @app.route("/", methods=["GET", "POST"])
-def index(response=""):  # Default value for response
+def index():
     global chatStr
     if request.method == "POST":
         user_message = request.form["msg"]
         response = chat(user_message)  # Generate response for user input
         chatStr += f"User: {user_message}\nInterviewerBot: {response}\n"  # Update conversation history
         speak(response)  # Speak the response
-    return render_template("chat.html", chat=chatStr, response=response)  # Render the chat interface
+        
+        # Split chat history into individual messages
+        chat_history = chatStr.split('\n')
+
+        return jsonify({"response": response, "chat_history": chat_history})
+
+    return render_template("chat.html") 
+
 
 # Function to log messages
 def log_message(message, log_file="interviewerbot.log", timestamp=True):
