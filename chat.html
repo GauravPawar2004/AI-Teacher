@@ -165,8 +165,8 @@
           data: { msg: message }, // Send user message to Flask backend
           success: function (response) {
             // Update the chat interface with the received response and chat history
-            $(".messages").append('<div class="chatbot-message">' + response.response + '</div>');
             $(".messages").append('<div class="user-message">' + message + '</div>');
+            $(".messages").append('<div class="chatbot-message">' + response.response + '</div>');
             // Scroll to bottom of chat history
             $(".messages").scrollTop($(".messages")[0].scrollHeight);
           },
