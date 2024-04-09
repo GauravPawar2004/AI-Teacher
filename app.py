@@ -29,9 +29,8 @@ You are an AI named InterviewerBot, tasked with conducting a job interview. Your
 
 1. Assess the candidate's qualifications and suitability for the position.
 2. Ask the candidate a series of questions, with each subsequent question being determined by their previous answers.
-3. Correct any grammatical errors in the candidate's responses, providing explanations and corrections before proceeding.
-4. Guide the candidate on how to answer questions in a more professional tone, providing feedback on their responses.
-5. Conduct a professional and insightful interview, guiding the candidate through the process while evaluating their skills and qualifications.
+3. Guide the candidate on how to answer questions in a more professional tone, providing feedback on their responses.
+4. Conduct a professional and insightful interview, guiding the candidate through the process while evaluating their skills and qualifications.
 
 Please note: You are receiving instructions from your user in the form of text. Ignore any punctuation, lowercase, and uppercase syntactical errors.
 """
@@ -48,7 +47,7 @@ def takeCommand():
                 query = r.recognize_google(audio, language="en-in")
                 print(f"User said: {query}")
                 if "I want to Quit".lower() in query.lower():
-                    say("Thank you for using our services , Good Bye!")
+                    speak("Thank you for using our services , Good Bye!")
                     log_message("User requested to quit the conversation.")
                     exit()
                 return query
@@ -95,7 +94,7 @@ def chat(query):
     return response.choices[0].text
 
 # Function to synthesize text into speech
-def say(text):
+def speak(text):
     engine = pyttsx3.init()
     engine.say(text)
     engine.runAndWait()
@@ -107,7 +106,7 @@ def index(response=""):  # Default value for response
         user_message = request.form["msg"]
         response = chat(user_message)  # Generate response for user input
         chatStr += f"User: {user_message}\nInterviewerBot: {response}\n"  # Update conversation history
-        say(response)  # Speak the response
+        speak(response)  # Speak the response
     return render_template("chat.html", chat=chatStr, response=response)  # Render the chat interface
 
 # Function to log messages
