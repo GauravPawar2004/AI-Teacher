@@ -14,7 +14,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 from time import sleep
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 
 app = Flask(__name__)
 
@@ -29,9 +29,8 @@ You are an AI named InterviewerBot, tasked with conducting a job interview. Your
 
 1. Assess the candidate's qualifications and suitability for the position.
 2. Ask the candidate a series of questions, with each subsequent question being determined by their previous answers.
-3. Correct any grammatical errors in the candidate's responses, providing explanations and corrections before proceeding.
-4. Guide the candidate on how to answer questions in a more professional tone, providing feedback on their responses.
-5. Conduct a professional and insightful interview, guiding the candidate through the process while evaluating their skills and qualifications.
+3. Guide the candidate on how to answer questions in a more professional tone, providing feedback on their responses.
+4. Conduct a professional and insightful interview, guiding the candidate through the process while evaluating their skills and qualifications.
 
 Please note: You are receiving instructions from your user in the form of text. Ignore any punctuation, lowercase, and uppercase syntactical errors.
 """
@@ -101,14 +100,21 @@ def speak(text):
     engine.runAndWait()
 
 @app.route("/", methods=["GET", "POST"])
-def index(response=""):  # Default value for response
+def index():
     global chatStr
     if request.method == "POST":
         user_message = request.form["msg"]
         response = chat(user_message)  # Generate response for user input
         chatStr += f"User: {user_message}\nInterviewerBot: {response}\n"  # Update conversation history
         speak(response)  # Speak the response
-    return render_template("chat.html", chat=chatStr, response=response)  # Render the chat interface
+        
+        # Split chat history into individual messages
+        chat_history = chatStr.split('\n')
+
+        return jsonify({"response": response, "chat_history": chat_history})
+
+    return render_template("chat.html") 
+
 
 # Function to log messages
 def log_message(message, log_file="interviewerbot.log", timestamp=True):
