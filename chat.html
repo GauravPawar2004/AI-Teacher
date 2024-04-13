@@ -1,143 +1,173 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>InterviewerBot Chat</title>
+  <title>Chatbot</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
   <style>
-    /* Base styles */
-    body {
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+
+    * {
       margin: 0;
       padding: 0;
+      box-sizing: border-box;
+      font-family: "Poppins", sans-serif;
+    }
+
+    /* Base styles */
+    body {
       font-family: Arial, sans-serif;
-      background-color: #f2f2f2;
+      margin: 0;
+      padding: 0;
+      background: #E3F2FD;
+      font-size: 16px;
     }
 
     .chat-container {
-      display: flex;
-      flex-direction: column;
-      height: 600px; /* Adjust height as needed */
-      width: 400px; /* Adjust width as needed */
-      margin: 20px auto;
+      width: 80%;
+      max-width: 600px;
+      height: 650px;
+      margin: 50px auto;
+      background-color: #ffffff;
       border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-      background-color: #fff;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
       overflow: hidden;
     }
 
-    /* Chat header */
     .chat-header {
-      padding: 15px;
-      display: flex;
-      justify-content: flex-start;
-      align-items: center;
-      background-color: #1abc9c;
+      background-color: #794898;
+      /* Purple color */
       color: #fff;
+      padding: 15px;
+      text-align: center;
     }
 
-    .chat-image {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      object-fit: cover; /* Maintain aspect ratio */
+    .messages {
+      padding: 10px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .input {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid #ddd;
+      padding: 10px;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 25px;
+      background-color: #f3e5f5;
+      font-size: 16px;
       margin-right: 10px;
     }
 
-    .chat-title {
-      font-size: 1.2em;
-      font-weight: bold;
+    button {
+      background-color: #7e57c2;
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      padding: 12px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
     }
 
-    /* Chat history */
-    #chat-history {
-      flex: 1;
-      padding: 10px;
-      overflow-y: scroll;
-    }
-
-    .message {
-      margin-bottom: 10px;
-      display: flex;
-      align-items: flex-start;
-    }
-
-    .user-message .message-content, .bot-message .message-content {
-      padding: 10px;
-      border-radius: 10px;
-      max-width: 70%;
+    button#speechButton {
+      margin-left: 10px;
     }
 
     .user-message {
+      background-color: #f3e5f5;
+      padding: 10px;
+      border-radius: 15px;
+      margin: 5px 0;
+      border: 1px solid #7e57c2;
+      font-size: 16px;
+      max-width: 70%;
+      word-wrap: break-word;
+      margin-right: auto;
+      margin-left: 10px;
+    }
+
+    .chatbot-message {
+      background-color: #f3e5f5;
+      padding: 10px;
+      border-radius: 15px;
+      margin: 5px 0;
+      border: 1px solid #7e57c2;
+      font-size: 16px;
+      max-width: 70%;
+      word-wrap: break-word;
       margin-left: auto;
-      background-color: #3498db;
-      color: #fff;
+      margin-right: 10px;
     }
 
-    .bot-message {
-      background-color: #f1f1f1;
+    .fa-user,
+    .fa-robot {
+      margin-right: 5px;
     }
 
-    /* Input form */
-    #messageForm {
-      display: flex;
+    .fa-user {
+      color: #007bff;
+    }
+
+    .fa-robot {
+      color: #28a745;
+    }
+
+    /* Typing indicator */
+    #typing-indicator {
+      display: none;
+      text-align: center;
       margin-top: 10px;
     }
 
-    #userMessage {
-      flex: 1;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      margin-right: 10px;
-      font-size: 14px;
+    #typing-indicator:before {
+      content: "Bot is typing...";
+      color: #007bff;
+      animation: typing 1s steps(4, end) infinite;
     }
 
-    button[type="submit"], #speechButton {
-      background-color: #1abc9c;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background-color 0.3s;
-    }
+    @keyframes typing {
+      from {
+        width: 0;
+      }
 
-    button[type="submit"]:hover, #speechButton:hover {
-      background-color: #16a085;
-    }
-
-    /* Timestamp */
-    .timestamp {
-      font-size: 12px;
-      color: #999;
-      margin-left: 5px;
+      to {
+        width: 100%;
+      }
     }
   </style>
 </head>
+
 <body>
   <div class="chat-container">
     <div class="chat-header">
-      <img src="bot_icon.png" alt="Bot Icon" class="chat-image">
       <h2 class="chat-title">InterviewerBot</h2>
     </div>
-    <div id="chat-history">
-      {% for message in chat %}
-        <div class="message {{ message.sender }}">
-          <div class="message-content">
-            <p>{{ message.content }}</p>
-            <span class="timestamp">{{ message.timestamp }}</span>
-          </div>
-        </div>
-      {% endfor %}
+    <div id="chat-history" class="messages">
+      <!-- Messages will be appended here -->
+      <!-- Sample messages -->
+      <div class="user-message"><i class="fas fa-user"></i> This is a user message</div><br>
+      <div class="chatbot-message"><i class="fas fa-robot"></i> This is a chatbot message</div>
     </div>
     <form id="messageForm" method="post">
-      <input type="text" id="userMessage" name="msg" placeholder="Type your message">
-      <button type="submit"><i class="fas fa-paper-plane"></i></button>
+      <div class="input">
+        <input type="text" id="userMessage" name="msg" placeholder="Type your message">
+        <button type="submit"><i class="fas fa-paper-plane"></i></button>
+        <button id="speechButton"><i class="fas fa-microphone"></i></button>
+      </div>
+      <p id="typing-indicator"></p>
     </form>
-    <button id="speechButton"><i class="fas fa-microphone"></i></button> <!-- New button for speech input -->
-    <p id="response">{{ response }}</p>
   </div>
+
+
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
   <script>
     $(document).ready(function () {
@@ -146,10 +176,12 @@
         recognizeSpeech();
       });
 
+      // Submit form event handler
       $("#messageForm").on("submit", function (event) {
         event.preventDefault(); // Prevent form submission
         var userMessage = $("#userMessage").val(); // Get user message from input field
         sendMessage(userMessage); // Send user message
+        $("#userMessage").val(""); // Clear the input field after sending the message
       });
 
       // Function to recognize speech
@@ -175,26 +207,11 @@
           url: "/",
           data: { msg: message }, // Send user message to Flask backend
           success: function (response) {
-            // Handle response from Flask backend
-            console.log(response); // Log response to console (for debugging)
-            // Update chat history with user message
-            $("#chat-history").append(`<div class="message user-message">
-                                          <div class="message-content">
-                                            <p>${message}</p>
-                                            <span class="timestamp">${getCurrentTime()}</span>
-                                          </div>
-                                        </div>`);
-            // Clear input field after sending message
-            $("#userMessage").val("");
+            // Update the chat interface with the received response and chat history
+            $(".messages").append('<br><div class="user-message"><i class="fas fa-user"></i> ' + message + '</div><br>');
+            $(".messages").append('<div class="chatbot-message"><i class="fas fa-robot"></i> ' + response.response + '</div><br>');
             // Scroll to bottom of chat history
-            $("#chat-history").scrollTop($("#chat-history")[0].scrollHeight);
-            // Display bot response
-            $("#chat-history").append(`<div class="message bot-message">
-                                          <div class="message-content">
-                                            <p>${response}</p>
-                                            <span class="timestamp">${getCurrentTime()}</span>
-                                          </div>
-                                        </div>`);
+            $(".messages").scrollTop($(".messages")[0].scrollHeight);
           },
           error: function (xhr, status, error) {
             // Handle errors
@@ -202,15 +219,8 @@
           }
         });
       }
-
-      // Function to get current time in HH:MM format
-      function getCurrentTime() {
-        var now = new Date();
-        var hours = now.getHours().toString().padStart(2, '0');
-        var minutes = now.getMinutes().toString().padStart(2, '0');
-        return hours + ":" + minutes;
-      }
     });
   </script>
 </body>
+
 </html>
