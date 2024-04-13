@@ -1,129 +1,142 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chatbot</title>
+  <title>InterviewerBot Chat</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
   <style>
     /* Base styles */
     body {
-      font-family: Arial, sans-serif;
       margin: 0;
       padding: 0;
-      background-color: #e0f2ff;
-      /* Light blue background */
+      font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
     }
 
-    .chatbot {
-      max-width: 400px;
+    .chat-container {
+      display: flex;
+      flex-direction: column;
+      height: 600px; /* Adjust height as needed */
+      width: 400px; /* Adjust width as needed */
       margin: 20px auto;
-      background-color: #fff;
       border-radius: 10px;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      background-color: #fff;
       overflow: hidden;
     }
 
-    .header {
-      background-color: #007bff;
-      /* Dark blue header */
+    /* Chat header */
+    .chat-header {
+      padding: 15px;
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      background-color: #1abc9c;
       color: #fff;
-      padding: 10px;
-      text-align: center;
     }
 
-    .messages {
+    .chat-image {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover; /* Maintain aspect ratio */
+      margin-right: 10px;
+    }
+
+    .chat-title {
+      font-size: 1.2em;
+      font-weight: bold;
+    }
+
+    /* Chat history */
+    #chat-history {
+      flex: 1;
       padding: 10px;
-      max-height: 300px;
       overflow-y: scroll;
     }
 
-    .input {
+    .message {
+      margin-bottom: 10px;
       display: flex;
-      border-top: 1px solid #ddd;
+      align-items: flex-start;
+    }
+
+    .user-message .message-content, .bot-message .message-content {
       padding: 10px;
+      border-radius: 10px;
+      max-width: 70%;
     }
 
-    input[type="text"] {
-      flex: 1;
-      padding: 5px;
-      border: none;
-      border-radius: 5px;
-    }
-
-    button {
-      background-color: #007bff;
-      color: #fff;
-      border: none;
-      border-radius: 5px;
-      padding: 5px 10px;
-      cursor: pointer;
-    }
-
-    /* Additional styles for chat messages */
     .user-message {
-      background-color: #d0e3f0;
-      /* Lighter blue for user messages */
-      padding: 10px;
-      border-radius: 5px;
-      margin: 5px 0;
+      margin-left: auto;
+      background-color: #3498db;
+      color: #fff;
     }
 
-    .chatbot-message {
-      background-color: #f0f0f0;
-      padding: 10px;
-      border-radius: 5px;
-      margin: 5px 0;
-      text-align: right;
+    .bot-message {
+      background-color: #f1f1f1;
     }
 
-    /* Typing indicator */
-    #typing-indicator {
-      display: none;
-      text-align: center;
+    /* Input form */
+    #messageForm {
+      display: flex;
       margin-top: 10px;
     }
 
-    #typing-indicator:before {
-      content: "Bot is typing...";
-      color: #007bff;
-      /* Blue text for typing indicator */
-      animation: typing 1s steps(4, end) infinite;
+    #userMessage {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      margin-right: 10px;
+      font-size: 14px;
     }
 
-    @keyframes typing {
-      from {
-        width: 0;
-      }
+    button[type="submit"], #speechButton {
+      background-color: #1abc9c;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
 
-      to {
-        width: 100%;
-      }
+    button[type="submit"]:hover, #speechButton:hover {
+      background-color: #16a085;
+    }
+
+    /* Timestamp */
+    .timestamp {
+      font-size: 12px;
+      color: #999;
+      margin-left: 5px;
     }
   </style>
 </head>
-
 <body>
   <div class="chat-container">
     <div class="chat-header">
       <img src="bot_icon.png" alt="Bot Icon" class="chat-image">
       <h2 class="chat-title">InterviewerBot</h2>
     </div>
-    <div id="chat-history" class="messages">
-      <!-- Messages will be appended here -->
-      {% for message in chat_history %}
-      <div class="message">
-        <p>{{ message }}</p>
-      </div>
+    <div id="chat-history">
+      {% for message in chat %}
+        <div class="message {{ message.sender }}">
+          <div class="message-content">
+            <p>{{ message.content }}</p>
+            <span class="timestamp">{{ message.timestamp }}</span>
+          </div>
+        </div>
       {% endfor %}
     </div>
     <form id="messageForm" method="post">
       <input type="text" id="userMessage" name="msg" placeholder="Type your message">
       <button type="submit"><i class="fas fa-paper-plane"></i></button>
     </form>
-    <button id="speechButton"><i class="fas fa-microphone"></i></button>
-    <p id="typing-indicator"></p>
+    <button id="speechButton"><i class="fas fa-microphone"></i></button> <!-- New button for speech input -->
+    <p id="response">{{ response }}</p>
   </div>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
   <script>
@@ -133,12 +146,10 @@
         recognizeSpeech();
       });
 
-      // Submit form event handler
       $("#messageForm").on("submit", function (event) {
         event.preventDefault(); // Prevent form submission
         var userMessage = $("#userMessage").val(); // Get user message from input field
         sendMessage(userMessage); // Send user message
-        $("#userMessage").val(""); // Clear the input field after sending the message
       });
 
       // Function to recognize speech
@@ -164,11 +175,26 @@
           url: "/",
           data: { msg: message }, // Send user message to Flask backend
           success: function (response) {
-            // Update the chat interface with the received response and chat history
-            $(".messages").append('<div class="user-message">' + message + '</div>');
-            $(".messages").append('<div class="chatbot-message">' + response.response + '</div>');
+            // Handle response from Flask backend
+            console.log(response); // Log response to console (for debugging)
+            // Update chat history with user message
+            $("#chat-history").append(`<div class="message user-message">
+                                          <div class="message-content">
+                                            <p>${message}</p>
+                                            <span class="timestamp">${getCurrentTime()}</span>
+                                          </div>
+                                        </div>`);
+            // Clear input field after sending message
+            $("#userMessage").val("");
             // Scroll to bottom of chat history
-            $(".messages").scrollTop($(".messages")[0].scrollHeight);
+            $("#chat-history").scrollTop($("#chat-history")[0].scrollHeight);
+            // Display bot response
+            $("#chat-history").append(`<div class="message bot-message">
+                                          <div class="message-content">
+                                            <p>${response}</p>
+                                            <span class="timestamp">${getCurrentTime()}</span>
+                                          </div>
+                                        </div>`);
           },
           error: function (xhr, status, error) {
             // Handle errors
@@ -176,10 +202,15 @@
           }
         });
       }
+
+      // Function to get current time in HH:MM format
+      function getCurrentTime() {
+        var now = new Date();
+        var hours = now.getHours().toString().padStart(2, '0');
+        var minutes = now.getMinutes().toString().padStart(2, '0');
+        return hours + ":" + minutes;
+      }
     });
-
-
   </script>
 </body>
-
 </html>
