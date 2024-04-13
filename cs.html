@@ -7,75 +7,118 @@
   <title>Chatbot</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Poppins", sans-serif;
+    }
+
     /* Base styles */
     body {
       font-family: Arial, sans-serif;
       margin: 0;
       padding: 0;
-      background-color: #e0f2ff;
-      /* Light blue background */
+      background: #E3F2FD;
+      font-size: 16px;
     }
 
-    .chatbot {
-      max-width: 400px;
-      margin: 20px auto;
-      background-color: #fff;
+    .chat-container {
+      width: 80%;
+      max-width: 600px;
+      height: 650px;
+      margin: 50px auto;
+      background-color: #ffffff;
       border-radius: 10px;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
       overflow: hidden;
     }
 
-    .header {
-      background-color: #007bff;
-      /* Dark blue header */
+    .chat-header {
+      background-color: #794898;
+      /* Purple color */
       color: #fff;
-      padding: 10px;
+      padding: 15px;
       text-align: center;
     }
 
     .messages {
       padding: 10px;
-      max-height: 300px;
-      overflow-y: scroll;
+      max-height: 400px;
+      overflow-y: auto;
     }
 
     .input {
       display: flex;
+      align-items: center;
+      justify-content: space-between;
       border-top: 1px solid #ddd;
       padding: 10px;
     }
 
     input[type="text"] {
       flex: 1;
-      padding: 5px;
+      padding: 12px;
       border: none;
-      border-radius: 5px;
+      border-radius: 25px;
+      background-color: #f3e5f5;
+      font-size: 16px;
+      margin-right: 10px;
     }
 
     button {
-      background-color: #007bff;
+      background-color: #7e57c2;
       color: #fff;
       border: none;
-      border-radius: 5px;
-      padding: 5px 10px;
+      border-radius: 50%;
+      padding: 12px;
       cursor: pointer;
+      transition: background-color 0.3s ease;
     }
 
-    /* Additional styles for chat messages */
+    button#speechButton {
+      margin-left: 10px;
+    }
+
     .user-message {
-      background-color: #d0e3f0;
-      /* Lighter blue for user messages */
+      background-color: #f3e5f5;
       padding: 10px;
-      border-radius: 5px;
+      border-radius: 15px;
       margin: 5px 0;
+      border: 1px solid #7e57c2;
+      font-size: 16px;
+      max-width: 70%;
+      word-wrap: break-word;
+      margin-right: auto;
+      margin-left: 10px;
     }
 
     .chatbot-message {
-      background-color: #f0f0f0;
+      background-color: #f3e5f5;
       padding: 10px;
-      border-radius: 5px;
+      border-radius: 15px;
       margin: 5px 0;
-      text-align: right;
+      border: 1px solid #7e57c2;
+      font-size: 16px;
+      max-width: 70%;
+      word-wrap: break-word;
+      margin-left: auto;
+      margin-right: 10px;
+    }
+
+    .fa-user,
+    .fa-robot {
+      margin-right: 5px;
+    }
+
+    .fa-user {
+      color: #007bff;
+    }
+
+    .fa-robot {
+      color: #28a745;
     }
 
     /* Typing indicator */
@@ -88,7 +131,6 @@
     #typing-indicator:before {
       content: "Bot is typing...";
       color: #007bff;
-      /* Blue text for typing indicator */
       animation: typing 1s steps(4, end) infinite;
     }
 
@@ -107,24 +149,25 @@
 <body>
   <div class="chat-container">
     <div class="chat-header">
-      <img src="bot_icon.png" alt="Bot Icon" class="chat-image">
       <h2 class="chat-title">InterviewerBot</h2>
     </div>
     <div id="chat-history" class="messages">
       <!-- Messages will be appended here -->
-      {% for message in chat_history %}
-      <div class="message">
-        <p>{{ message }}</p>
-      </div>
-      {% endfor %}
+      <!-- Sample messages -->
+      <div class="user-message"><i class="fas fa-user"></i> This is a user message</div><br>
+      <div class="chatbot-message"><i class="fas fa-robot"></i> This is a chatbot message</div>
     </div>
     <form id="messageForm" method="post">
-      <input type="text" id="userMessage" name="msg" placeholder="Type your message">
-      <button type="submit"><i class="fas fa-paper-plane"></i></button>
+      <div class="input">
+        <input type="text" id="userMessage" name="msg" placeholder="Type your message">
+        <button type="submit"><i class="fas fa-paper-plane"></i></button>
+        <button id="speechButton"><i class="fas fa-microphone"></i></button>
+      </div>
+      <p id="typing-indicator"></p>
     </form>
-    <button id="speechButton"><i class="fas fa-microphone"></i></button>
-    <p id="typing-indicator"></p>
   </div>
+
+
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
   <script>
     $(document).ready(function () {
@@ -151,11 +194,12 @@
           var userSpeech = event.results[0][0].transcript; // Get recognized speech
           sendMessage(userSpeech); // Send user speech
         };
-        
+
         recognition.onerror = function (event) {
           console.error("Speech recognition error:", event.error);
         };
       }
+
       // Function to send user message
       function sendMessage(message) {
         $.ajax({
@@ -164,8 +208,8 @@
           data: { msg: message }, // Send user message to Flask backend
           success: function (response) {
             // Update the chat interface with the received response and chat history
-            $(".messages").append('<div class="user-message">' + message + '</div>');
-            $(".messages").append('<div class="chatbot-message">' + response.response + '</div>');
+            $(".messages").append('<br><div class="user-message"><i class="fas fa-user"></i> ' + message + '</div><br>');
+            $(".messages").append('<div class="chatbot-message"><i class="fas fa-robot"></i> ' + response.response + '</div><br>');
             // Scroll to bottom of chat history
             $(".messages").scrollTop($(".messages")[0].scrollHeight);
           },
@@ -178,4 +222,5 @@
     });
   </script>
 </body>
+
 </html>
